@@ -319,7 +319,7 @@ function normalizeMap(m){
 }
 
 async function loadMaps(){
-  if(CONFIG.API_URL.includes("https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec")){
+  if(CONFIG.API_URL.includes("https://script.google.com/macros/s/AKfycbz1Qbl1zLzsjZ7v3_lk9NDo4wHEhVbcg5iN_ockOlNuMg6onGLkyql-pZ2vEYXjuog4/exec")){
     showError("The map database is not connected yet. Set CONFIG.API_URL in index.html to your Apps Script /exec URL.");
     $("mapList").innerHTML = '<div class="empty">MAP DATABASE NOT CONNECTED</div>';
     return;
