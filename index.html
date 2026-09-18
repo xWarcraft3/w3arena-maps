@@ -220,207 +220,139 @@ footer{
 
 <body>
 <header>
-  <div class="wrap">
-    <div class="brand-mark" aria-label="W3Arena">
-      <!-- Replace the image URL below with the official W3Arena logo asset if desired. -->
-      <div class="brand-fallback">W3A</div>
-    </div>
-    <div class="brand-name">W3ARENA</div>
-    <div class="kicker">MAP DATABASE // COMMUNITY INDEX</div>
-  </div>
-</header>
-
-<main class="wrap">
-  <section class="hero">
-    <div class="eyebrow">WARCRAFT III // MAP DIRECTORY</div>
-    <h1>AVAILABLE MAPS</h1>
-    <p>A clean, searchable index of maps currently listed for play on the W3Arena platform.</p>
-    <p class="sub">Un índice limpio y fácil de buscar de los mapas disponibles actualmente para jugar en W3Arena.</p>
-    <a class="download" href="https://www.w3arena.pro/" target="_blank" rel="noopener noreferrer">
-      Download W3Arena · Descargar W3Arena ↗
-    </a>
-  </section>
-
-  <div id="errorBox" class="error" hidden></div>
-
-  <section class="stats" aria-label="Map statistics">
-    <div class="stat"><div class="num" id="totalMaps">—</div><div class="label">TOTAL MAPS</div></div>
-    <div class="stat"><div class="num" id="totalLinks">—</div><div class="label">MAP LINKS</div></div>
-    <div class="stat"><div class="num" id="showing">—</div><div class="label">SHOWING</div></div>
-  </section>
-
-  <div class="toolbar">
-    <input id="search" class="search" type="search" placeholder="Search Map ID or Map Name..." autocomplete="off">
-    <select id="sort">
-      <option value="id-asc">Map ID A-Z</option>
-      <option value="id-desc">Map ID Z-A</option>
-      <option value="name-asc">Map Name A-Z</option>
-      <option value="name-desc">Map Name Z-A</option>
-    </select>
-  </div>
-
-  <section class="table-shell">
+  <div class="table-shell">
     <div class="table-head">
-      <div>MAP ID</div><div>MAP NAME</div><div>STATUS</div>
+      <div>MAP ID</div>
+      <div>MAP NAME</div>
     </div>
-    <div id="mapList"><div class="loading">LOADING MAP DATABASE...</div></div>
-  </section>
+    <div id="mapRows">
+      <div class="loading">LOADING MAP DATABASE...</div>
+    </div>
+  </div>
 
   <div class="pagination">
-    <button class="page-btn" id="prev" type="button">← PREVIOUS</button>
-    <div class="page-info" id="pageInfo">PAGE — / —</div>
-    <button class="page-btn" id="next" type="button">NEXT →</button>
+    <button id="prevBtn" class="page-btn" disabled>← PREVIOUS</button>
+    <div id="pageInfo" class="page-info">PAGE — / —</div>
+    <button id="nextBtn" class="page-btn" disabled>NEXT →</button>
   </div>
 </main>
 
 <footer>
-  <div>W3ARENA MAP DATABASE</div>
-  <div>Community-maintained directory. Not an official W3Arena website.</div>
+  <div class="wrap">
+    W3ARENA MAP DATABASE<br>
+    <span style="color:#4a5461;">Community-maintained directory. Not an official W3Arena website.</span>
+  </div>
 </footer>
 
 <script>
-/*
-  GITHUB PAGES SETUP:
-  1. Create a Google Sheet with a tab named "Maps".
-  2. Import w3arena_maps_google_sheet.csv into it.
-  3. Add/update rows directly in the Sheet from then on.
-  4. Deploy Code.gs as a Google Apps Script Web App.
-  5. Paste its /exec URL below.
-*/
+// CONFIGURATION
 const CONFIG = {
-  API_URL: "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE",
-  MAPS_PER_PAGE: 20
+  API_URL: "YOUR_GOOGLE_APPS_SCRIPT_EXEC_URL_HERE",
+  ITEMS_PER_PAGE: 15
 };
 
-let maps = [];
-let filtered = [];
-let page = 1;
+let allMaps = [];
+let filteredMaps = [];
+let currentPage = 1;
 
-const $ = id => document.getElementById(id);
+// DOM ELEMENTS
+const mapRows = document.getElementById('mapRows');
+const errorBox = document.getElementById('errorBox');
+const searchInput = document.getElementById('search');
+const totalMapsEl = document.getElementById('totalMaps');
+const totalLinksEl = document.getElementById('totalLinks');
+const showingEl = document.getElementById('showing');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const pageInfo = document.getElementById('pageInfo');
 
-function clean(v){ return String(v ?? "").trim(); }
+// FETCH DATA FROM GOOGLE SHEETS
+async function loadDatabase() {
+  try {
+    const response = await fetch(CONFIG.API_URL);
+    if (!response.ok) throw new Error("Network connection response failed");
+    
+    const data = await response.json();
+    if (!Array.isArray(data) || data.length === 0) throw new Error("Invalid or empty data returned");
 
-function statusClass(status){
-  const s = clean(status).toUpperCase();
-  if(s === "AVAILABLE") return "status";
-  if(s === "NOT COMPATIBLE") return "status incompatible";
-  if(s === "UNAVAILABLE") return "status unavailable";
-  if(s === "OUTDATED") return "status outdated";
-  return "status unknown";
+    // Map rows ignoring any missing status properties completely
+    allMaps = data.map(item => ({
+      id: item.map_id || "—",
+      name: item.map_name || "Untitled Map"
+    })).filter(item => item.id !== "—" || item.name !== "Untitled Map");
+
+    filteredMaps = [...allMaps];
+    updateStats();
+    renderPage();
+    setupEventListeners();
+  } catch (err) {
+    console.error(err);
+    errorBox.textContent = "Could not load the Google Sheet data. Check that the Apps Script Web App is deployed for public access and that CONFIG.API_URL is correct.";
+    errorBox.hidden = false;
+    mapRows.innerHTML = '<div class="empty">DATABASE CONNECTION ERROR</div>';
+  }
 }
 
-function normalizeMap(m){
-  return {
-    id: clean(m["Map ID"]),
-    name: clean(m["Map Name"]),
-    link: clean(m["Link"]),
-    status: clean(m["Status"]) || "AVAILABLE"
-  };
+function updateStats() {
+  totalMapsEl.textContent = allMaps.length;
+  totalLinksEl.textContent = "0"; // Removed status column tracking
+  showingEl.textContent = filteredMaps.length;
 }
 
-async function loadMaps(){
-  if(CONFIG.API_URL.includes("https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec")){
-    showError("The map database is not connected yet. Set CONFIG.API_URL in index.html to your Apps Script /exec URL.");
-    $("mapList").innerHTML = '<div class="empty">MAP DATABASE NOT CONNECTED</div>';
+function renderPage() {
+  const totalPages = Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE) || 1;
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const start = (currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
+  const end = start + CONFIG.ITEMS_PER_PAGE;
+  const pageItems = filteredMaps.slice(start, end);
+
+  if (pageItems.length === 0) {
+    mapRows.innerHTML = '<div class="empty">NO MATCHING MAPS FOUND</div>';
+    pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
     return;
   }
 
-  try{
-    const response = await fetch(CONFIG.API_URL, {cache:"no-store"});
-    if(!response.ok) throw new Error("HTTP " + response.status);
-    const data = await response.json();
-    if(!Array.isArray(data)) throw new Error("Invalid API response.");
-    maps = data.map(normalizeMap).filter(m => m.id || m.name);
-    hideError();
-    apply();
-  }catch(err){
-    showError("Could not load the Google Sheet data. Check that the Apps Script Web App is deployed for public access and that CONFIG.API_URL is correct.");
-    $("mapList").innerHTML = '<div class="empty">UNABLE TO LOAD MAP DATABASE</div>';
-    console.error(err);
-  }
+  // Generate clean 2-column layout row blocks dynamically
+  mapRows.innerHTML = pageItems.map(map => `
+    <div class="row" style="grid-template-columns: 150px minmax(0, 1fr);">
+      <div class="id">${map.id}</div>
+      <div class="map-name">
+        <span class="no-link">${map.name}</span>
+      </div>
+    </div>
+  `).join('');
+
+  pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
+  prevBtn.disabled = currentPage === 1;
+  nextBtn.disabled = currentPage === totalPages;
 }
 
-function apply(){
-  const q = clean($("search").value).toLowerCase();
-  filtered = maps.filter(m =>
-    m.id.toLowerCase().includes(q) ||
-    m.name.toLowerCase().includes(q)
-  );
-
-  const sort = $("sort").value;
-  filtered.sort((a,b) => {
-    if(sort.startsWith("id")){
-      const aa = a.id.localeCompare(b.id, undefined, {numeric:true});
-      return sort === "id-asc" ? aa : -aa;
-    }
-    const aa = a.name.localeCompare(b.name, undefined, {numeric:true, sensitivity:"base"});
-    return sort === "name-asc" ? aa : -aa;
+function setupEventListeners() {
+  searchInput.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase().trim();
+    filteredMaps = allMaps.filter(map => 
+      map.id.toString().toLowerCase().includes(term) || 
+      map.name.toLowerCase().includes(term)
+    );
+    currentPage = 1;
+    showingEl.textContent = filteredMaps.length;
+    renderPage();
   });
 
-  const pages = Math.max(1, Math.ceil(filtered.length / CONFIG.MAPS_PER_PAGE));
-  page = Math.min(page, pages);
-  render();
+  prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); } };
+  nextBtn.onclick = () => { if (currentPage < Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE)) { currentPage++; renderPage(); } };
 }
 
-function render(){
-  const start = (page - 1) * CONFIG.MAPS_PER_PAGE;
-  const items = filtered.slice(start, start + CONFIG.MAPS_PER_PAGE);
-  const pages = Math.max(1, Math.ceil(filtered.length / CONFIG.MAPS_PER_PAGE));
-
-  $("totalMaps").textContent = maps.length;
-  $("totalLinks").textContent = maps.filter(m => m.link).length;
-  $("showing").textContent = items.length;
-
-  $("pageInfo").textContent = `PAGE ${page} / ${pages}`;
-  $("prev").disabled = page <= 1;
-  $("next").disabled = page >= pages;
-
-  if(!items.length){
-    $("mapList").innerHTML = '<div class="empty">NO MAPS FOUND</div>';
-    return;
-  }
-
-  $("mapList").innerHTML = items.map(m => {
-    const name = escapeHtml(m.name || "Unnamed Map");
-    const id = escapeHtml(m.id || "—");
-    const status = escapeHtml(m.status.toUpperCase());
-    const cls = statusClass(m.status);
-
-    const mapName = m.link
-      ? `<a class="map-link" href="${escapeAttr(m.link)}" target="_blank" rel="noopener noreferrer">${name} ↗</a>`
-      : `<span class="no-link">${name}</span>`;
-
-    return `
-      <div class="row">
-        <div class="id">${id}</div>
-        <div class="map-name">${mapName}</div>
-        <div><div class="${cls}">${status}</div></div>
-      </div>`;
-  }).join("");
+// Initializing loader execution block
+if (CONFIG.API_URL && CONFIG.API_URL !== "YOUR_GOOGLE_APPS_SCRIPT_EXEC_URL_HERE") {
+  loadDatabase();
+} else {
+  errorBox.textContent = "Please set your deployed Google Apps Script URL string inside the CONFIG object configuration block.";
+  errorBox.hidden = false;
 }
-
-function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[c]));
-}
-function escapeAttr(s){ return escapeHtml(s); }
-
-function showError(msg){
-  $("errorBox").textContent = msg;
-  $("errorBox").hidden = false;
-}
-function hideError(){ $("errorBox").hidden = true; }
-
-$("search").addEventListener("input", () => { page = 1; apply(); });
-$("sort").addEventListener("change", () => { page = 1; apply(); });
-$("prev").addEventListener("click", () => { if(page > 1){ page--; render(); window.scrollTo({top:document.querySelector(".table-shell").offsetTop - 20,behavior:"smooth"}); }});
-$("next").addEventListener("click", () => {
-  const pages = Math.max(1, Math.ceil(filtered.length / CONFIG.MAPS_PER_PAGE));
-  if(page < pages){ page++; render(); window.scrollTo({top:document.querySelector(".table-shell").offsetTop - 20,behavior:"smooth"}); }
-});
-
-loadMaps();
 </script>
 </body>
 </html>
