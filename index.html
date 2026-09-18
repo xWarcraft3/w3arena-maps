@@ -193,6 +193,7 @@ const CSV_URL = "maps.csv";
 let allMaps = [];
 let filteredMaps = [];
 
+// Clean split loop handles data without crashing on commas inside strings
 function parseCSV(text) {
   const lines = text.split('\n');
   const result = [];
@@ -214,7 +215,7 @@ async function loadDatabase() {
   const listEl = document.getElementById('list');
   try {
     const response = await fetch(CSV_URL);
-    if (!response.ok) throw new Error("File missing");
+    if (!response.ok) throw new Error("Local file fetch missing");
     const rawText = await response.text();
     allMaps = parseCSV(rawText);
     filteredMaps = [...allMaps];
@@ -223,7 +224,9 @@ async function loadDatabase() {
     applyFiltersAndSort();
   } catch (err) {
     console.warn(err);
-    listEl.innerHTML = '<div class="empty" style="display:block;color:#ffa3a3;border-color:var(--w3a-red);">CORS CROSS-ORIGIN DEFENSE: Push your local modifications directly onto your online GitHub repository to run database fetch requests live!</div>';
+    if (listEl) {
+      listEl.innerHTML = '<div class="empty" style="display:block;color:#ffa3a3;border-color:#e33a3a;">CORS BROWSER DEFENSE: Upload this file to GitHub and it will run perfectly live online!</div>';
+    }
   }
 }
 
@@ -233,24 +236,47 @@ function renderTable() {
   document.getElementById('shown').textContent = filteredMaps.length;
   
   if (filteredMaps.length === 0) {
-    listEl.innerHTML = '';
-    emptyEl.style.display = 'block';
+    if (listEl) listEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'block';
     return;
   }
-  emptyEl.style.display = 'none';
+  if (emptyEl) emptyEl.style.display = 'none';
   
-  listEl.innerHTML = filteredMaps.map(map => `
-    <div class="row">
-      <div class="id"># ${map.id}</div>
-      <div class="name"><span class="nolink">${map.name}</span></div>
-    </div>
-  `).join('');
+  // Re-targeted elements safely to look for the container ID list
+  if (listEl) {
+    listEl.innerHTML = filteredMaps.map(map => `
+      <div class="row">
+        <div class="id"># ${map.id}</div>
+        <div class="name"><span class="nolink">${map.name}</span></div>
+      </div>
+    `).join('');
+  }
 }
 
 function applyFiltersAndSort() {
   const term = document.getElementById('search').value.toLowerCase().trim();
   const sortType = document.getElementById('sort').value;
-  filteredMaps = allMaps.filter(map =>map.id.toString().toLowerCase().includes(term) ||map.name.toLowerCase().includes(term));
-  filteredMaps.sort((a, b) => {if (sortType === 'id-asc') return parseInt(a.id) - parseInt(b.id);if (sortType === 'id-desc') return parseInt(b.id) - parseInt(a.id);
-                               if (sortType === 'name-asc') return a.name.localeCompare(b.name);if (sortType === 'name-desc') return b.name.localeCompare(a.name);
-                               return 0;});renderTable();}document.getElementById('search').addEventListener('input', applyFiltersAndSort);document.getElementById('sort').addEventListener('change', applyFiltersAndSort);loadDatabase();
+  
+  filteredMaps = allMaps.filter(map => 
+    map.id.toString().toLowerCase().includes(term) || 
+    map.name.toLowerCase().includes(term)
+  );
+
+  filteredMaps.sort((a, b) => {
+    if (sortType === 'id-asc') return parseInt(a.id) - parseInt(b.id);
+    if (sortType === 'id-desc') return parseInt(b.id) - parseInt(a.id);
+    if (sortType === 'name-asc') return a.name.localeCompare(b.name);
+    if (sortType === 'name-desc') return b.name.localeCompare(a.name);
+    return 0;
+  });
+
+  renderTable();
+}
+
+document.getElementById('search').addEventListener('input', applyFiltersAndSort);
+document.getElementById('sort').addEventListener('change', applyFiltersAndSort);
+
+loadDatabase();
+</script>
+</body>
+</html>
