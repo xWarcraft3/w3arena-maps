@@ -269,13 +269,18 @@ const pageInfo = document.getElementById('pageInfo');
 // FETCH DATA FROM GOOGLE SHEETS
 async function loadDatabase() {
   try {
-    const response = await fetch(CONFIG.API_URL);
+    // Added 'cors' mode and redirect parameters to clear the stuck loading state
+    const response = await fetch(CONFIG.API_URL, {
+      method: 'GET',
+      mode: 'cors',
+      redirect: 'follow'
+    });
+    
     if (!response.ok) throw new Error("Network connection response failed");
     
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0) throw new Error("Invalid or empty data returned");
 
-    // Clean data parsing mapping setup blocks
     allMaps = data.map(item => ({
       id: item.map_id || "—",
       name: item.map_name || "Untitled Map"
@@ -283,7 +288,6 @@ async function loadDatabase() {
 
     filteredMaps = [...allMaps];
     
-    // Safety verification check on global dashboard components
     if(totalMapsEl) totalMapsEl.textContent = allMaps.length;
     if(totalLinksEl) totalLinksEl.textContent = allMaps.length; 
     if(showingEl) showingEl.textContent = filteredMaps.length;
@@ -291,7 +295,7 @@ async function loadDatabase() {
     renderPage();
     setupEventListeners();
   } catch (err) {
-    console.error(err);
+    console.error("Fetch Error Detail: ", err);
     if (errorBox) {
       errorBox.textContent = "Database communication link failed. Please check endpoint configurations.";
       errorBox.hidden = false;
@@ -299,7 +303,6 @@ async function loadDatabase() {
     mapRows.innerHTML = '<div class="empty">DATABASE CONNECTION ERROR</div>';
   }
 }
-
 function renderPage() {
   const totalPages = Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
