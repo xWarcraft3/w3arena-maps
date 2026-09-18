@@ -3,367 +3,255 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="W3Arena Map Database — Community-maintained database platform.">
 <title>W3Arena Map Database</title>
-<meta name="description" content="Community-maintained W3Arena Warcraft III map database.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
+<link rel="preconnect" href="https://googleapis.com">
+<link rel="preconnect" href="https://gstatic.com" crossorigin>
+<link href="https://googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#080a0d;
-  --panel:#0d1116;
-  --panel2:#11161d;
-  --line:#252c35;
+  --bg:#05070a;
+  --panel:#0b0d12;
+  --panel-hover:#11151e;
+  --line:#1c2331;
   --text:#edf2f7;
-  --muted:#8b96a3;
-  --accent:#d8e0e8;
-  --accent2:#7d8b99;
-  --green:#5ee6a8;
-  --danger:#ff6b6b;
-  --shadow:0 18px 50px rgba(0,0,0,.35);
+  --muted:#6c7a89;
+  --accent:#3a8ee3;
+  --accent-glow:rgba(58,142,227,0.25);
+  --w3a-red:#ff3333;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
-  margin:0;
-  background:
-    radial-gradient(circle at 50% -10%,rgba(255,255,255,.07),transparent 35%),
-    linear-gradient(180deg,#0a0c10 0%,var(--bg) 42%,#07090c 100%);
-  color:var(--text);
-  font-family:Rajdhani,Arial,sans-serif;
-  min-height:100vh;
+  margin:0; color:var(--text); background:
+  radial-gradient(circle at 50% -20%, rgba(58,142,227,0.15), transparent 45%),
+  linear-gradient(180deg,#07090e 0%,var(--bg) 100%);
+  font-family:Rajdhani,Arial,sans-serif; min-height:100vh;
 }
 body:before{
-  content:"";
-  position:fixed; inset:0; pointer-events:none; opacity:.28;
-  background-image:
-    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
-  background-size:38px 38px;
-  mask-image:linear-gradient(to bottom,black,transparent 75%);
+  content:""; position:fixed; inset:0; pointer-events:none; opacity:.04;
+  background-image:linear-gradient(rgba(255,255,255,.1) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.1) 1px,transparent 1px);
+  background-size:32px 32px;
 }
-a{color:inherit}
-.wrap{width:min(1120px,calc(100% - 32px));margin:auto}
+.container{width:min(1140px,calc(100% - 32px));margin:auto}
 
 header{
-  padding:42px 0 28px;
-  border-bottom:1px solid var(--line);
-  text-align:center;
+  border-bottom:1px solid var(--line); background:rgba(11,13,18,0.7);
+  backdrop-filter:blur(20px); position:sticky; top:0; z-index:10;
 }
-.brand-mark{
-  width:76px;height:76px;margin:0 auto 15px;
-  border:1px solid #48515c;border-radius:18px;
-  display:grid;place-items:center;
-  background:linear-gradient(145deg,#171d24,#090c10);
-  box-shadow:0 10px 35px rgba(0,0,0,.45),inset 0 0 25px rgba(255,255,255,.035);
-  overflow:hidden;
+.nav{height:84px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:16px}
+.logo-container {
+  position: relative;
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  padding: 2px;
+  background: linear-gradient(180deg, var(--line), transparent);
+  box-shadow: 0 0 20px var(--accent-glow);
 }
-.brand-mark img{width:62px;height:62px;object-fit:contain}
-.brand-fallback{
-  font-family:"Share Tech Mono",monospace;
-  font-size:18px;font-weight:bold;letter-spacing:-1px;
+.logo-img {
+  width: 100%; height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #000;
 }
-.brand-name{
-  font-size:30px;font-weight:700;letter-spacing:.14em;
-}
-.kicker{
-  margin-top:5px;color:var(--muted);
-  font:12px "Share Tech Mono",monospace;letter-spacing:.14em;
+.brand-title{font-weight:700;letter-spacing:3px;font-size:22px;color:#fff;text-transform:uppercase}
+.brand-sub{font-family:"Share Tech Mono",monospace;color:var(--muted);font-size:10px;letter-spacing:2px;margin-top:4px}
+.nav-tag{
+  font-family:"Share Tech Mono",monospace; font-size:11px; color:#fff;
+  background:rgba(255,51,51,0.15); border:1px solid rgba(255,51,51,0.3);
+  padding:4px 10px; border-radius:4px; letter-spacing:1px;
 }
 
-.hero{padding:58px 0 28px}
-.eyebrow{
-  color:var(--accent2);
-  font:12px "Share Tech Mono",monospace;
-  letter-spacing:.18em;margin-bottom:12px;
-}
-h1{
-  margin:0;font-size:clamp(38px,7vw,72px);
-  line-height:.9;letter-spacing:.025em;
-  text-transform:uppercase;
-}
-.hero p{
-  max-width:720px;color:#aeb7c1;
-  font-size:17px;line-height:1.55;margin:20px 0 18px;
-}
-.hero .sub{font-size:14px;color:#6f7a86;margin-top:-8px}
-.download{
-  display:inline-flex;align-items:center;gap:9px;
-  margin-top:4px;padding:10px 15px;
-  border:1px solid #39434e;border-radius:7px;
-  text-decoration:none;color:#e8edf2;
-  font-weight:600;letter-spacing:.04em;
-  background:#10151b;transition:.2s;
-}
-.download:hover{border-color:#697684;background:#171d24;transform:translateY(-1px)}
+.hero{padding:60px 0 40px; text-align:center}
+.kicker{font-family:"Share Tech Mono",monospace;color:var(--muted);font-size:12px;letter-spacing:4px;text-transform:uppercase}
+h1{font-size:clamp(46px,8vw,82px);line-height:1;margin:16px 0;letter-spacing:-1px;font-weight:700;text-transform:uppercase}
+.hero p{max-width:620px;color:var(--muted);font-size:18px;margin:0 auto;line-height:1.5}
+.hero small{display:block;margin-top:8px;font-size:14px;opacity:0.7}
 
-.stats{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  gap:10px;margin:20px 0 28px;
-}
+.stats{display:flex;gap:16px;justify-content:center;margin-top:35px}
 .stat{
-  background:rgba(13,17,22,.82);border:1px solid var(--line);
-  padding:16px 18px;border-radius:8px;
+  background:var(--panel); border:1px solid var(--line); border-radius:8px;
+  padding:14px 24px; min-width:150px; text-align:center;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
 }
-.stat .num{font:24px "Share Tech Mono",monospace}
-.stat .label{
-  color:#737f8b;font:10px "Share Tech Mono",monospace;
-  letter-spacing:.14em;margin-top:4px;
-}
+.stat b{display:block;font-size:28px;color:#fff;font-family:"Share Tech Mono",monospace}
+.stat span{font-family:"Share Tech Mono",monospace;font-size:10px;color:var(--muted);letter-spacing:1.5px}
 
 .toolbar{
-  display:flex;gap:10px;align-items:center;
-  margin-bottom:12px;
+  margin:40px 0 20px; padding:16px; display:flex; gap:12px; flex-wrap:wrap;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
 }
-.search{
-  flex:1;min-width:0;
-  background:#0d1217;border:1px solid var(--line);
-  color:var(--text);border-radius:7px;
-  padding:13px 14px;outline:none;
-  font:15px Rajdhani,Arial,sans-serif;
+.search-wrap{flex:1;min-width:260px;position:relative}
+.search-wrap span{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:18px}
+input,select{
+  width:100%; background:#06080b; border:1px solid var(--line); color:var(--text);
+  border-radius:6px; padding:14px 16px; font:600 15px Rajdhani, sans-serif; outline:none;
+  transition:all 0.2s ease;
 }
-.search:focus{border-color:#596674;box-shadow:0 0 0 3px rgba(120,135,150,.08)}
-select{
-  width:190px;background:#0d1217;color:#dce3e9;
-  border:1px solid var(--line);border-radius:7px;
-  padding:12px;font:14px Rajdhani,Arial,sans-serif;
-}
+input{padding-left:46px}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 12px var(--accent-glow)}
+select{width:auto;min-width:200px;cursor:pointer}
 
-.table-shell{
-  border:1px solid var(--line);border-radius:9px;
-  overflow:hidden;background:rgba(13,17,22,.88);
-  box-shadow:var(--shadow);
-}
-.table-head,.row{
-  display:grid;grid-template-columns:150px minmax(0,1fr) 190px;
-  align-items:center;
-}
+.table-wrap{background:transparent; display:flex; flex-direction:column; gap:10px}
 .table-head{
-  background:#11161c;color:#6f7b87;
-  font:10px "Share Tech Mono",monospace;
-  letter-spacing:.15em;padding:12px 18px;
-  border-bottom:1px solid var(--line);
+  display:grid; grid-template-columns:140px 1fr; align-items:center;
+  color:var(--muted); font-family:"Share Tech Mono",monospace;
+  font-size:11px; letter-spacing:2px; padding:10px 20px; text-transform:uppercase;
 }
 .row{
-  min-height:62px;padding:0 18px;border-bottom:1px solid #1b2128;
+  display:grid; grid-template-columns:140px 1fr; align-items:center;
+  min-height:68px; padding:12px 20px; background:var(--panel);
+  border:1px solid var(--line); border-radius:8px; transition:all 0.2s ease;
 }
-.row:last-child{border-bottom:0}
-.row:hover{background:#11171d}
-.id{font-family:"Share Tech Mono",monospace;color:#9aa6b2;font-size:13px}
-.map-link{text-decoration:none;color:#edf2f7;font-size:16px;font-weight:600;overflow-wrap:anywhere}
-.map-link:hover{text-decoration:underline;text-underline-offset:3px}
-.map-name{overflow:hidden}
-.no-link{color:#a8b1ba;font-size:16px;font-weight:600}
-.status{
-  justify-self:start;
-  display:inline-flex;align-items:center;gap:8px;
-  color:var(--green);font:11px "Share Tech Mono",monospace;
-  letter-spacing:.08em;
+.row:hover{
+  background:var(--panel-hover); border-color:var(--accent);
+  transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.4);
 }
-.status:before{
-  content:"";width:7px;height:7px;border-radius:50%;
-  background:var(--green);box-shadow:0 0 9px var(--green);
-}
-.status.incompatible,.status.unavailable,.status.outdated{color:var(--danger)}
-.status.incompatible:before,.status.unavailable:before,.status.outdated:before{
-  background:var(--danger);box-shadow:0 0 9px var(--danger)
-}
-.status.unknown{color:#c5ccd3}
-.status.unknown:before{background:#8a949e;box-shadow:none}
-
+.id{font-family:"Share Tech Mono",monospace;color:var(--muted);font-size:14px;font-weight:600}
+.name .nolink{font-weight:700;font-size:19px;color:#fff;letter-spacing:0.5px}
 .empty{
-  padding:42px 20px;text-align:center;color:#707b86;
-  font:12px "Share Tech Mono",monospace;letter-spacing:.08em;
+  padding:60px; text-align:center; color:var(--muted); background:var(--panel);
+  border:1px solid var(--line); border-radius:8px; font-size:16px; display:none;
 }
-.pagination{
-  display:flex;align-items:center;justify-content:center;
-  gap:12px;padding:20px 0 42px;
-}
-.page-btn{
-  border:1px solid var(--line);background:#0d1217;color:#dce3e9;
-  border-radius:6px;padding:9px 14px;cursor:pointer;
-  font:13px "Share Tech Mono",monospace;
-}
-.page-btn:hover:not(:disabled){background:#161c23;border-color:#596674}
-.page-btn:disabled{opacity:.35;cursor:not-allowed}
-.page-info{color:#7d8791;font:11px "Share Tech Mono",monospace;min-width:120px;text-align:center}
-
-footer{
-  border-top:1px solid var(--line);padding:22px 0 30px;
-  color:#626d78;font:11px "Share Tech Mono",monospace;
-  text-align:center;line-height:1.7;
-}
-.loading{padding:45px 20px;text-align:center;color:#77828d;font:12px "Share Tech Mono",monospace}
-.error{
-  margin:0 0 22px;padding:14px;border:1px solid #4b2b2b;
-  background:#171011;color:#ff9b9b;border-radius:7px;
-  font:12px "Share Tech Mono",monospace;line-height:1.5;
+.loading{
+  padding:60px; text-align:center; color:var(--accent); background:var(--panel);
+  border:1px solid var(--line); border-radius:8px; font-family:"Share Tech Mono",monospace; font-size:14px;
 }
 
-@media(max-width:700px){
-  .wrap{width:min(100% - 20px,1120px)}
-  header{padding-top:28px}
-  .hero{padding-top:42px}
-  .stats{grid-template-columns:1fr}
-  .toolbar{flex-direction:column}
-  .search,select{width:100%}
+footer{padding:60px 0; color:var(--muted); font-family:"Share Tech Mono",monospace; font-size:11px; letter-spacing:1px; text-align:center; line-height:1.8}
+footer strong{color:#fff; letter-spacing:2px}
+
+@media(max-width:650px){
+  .nav{height:74px}.brand-title{font-size:19px}
+  .hero{padding:40px 0 20px}h1{font-size:48px}
   .table-head{display:none}
-  .row{
-    grid-template-columns:1fr;
-    gap:8px;padding:15px 16px;min-height:0;
-  }
-  .status{margin-top:3px}
+  .row{grid-template-columns:1fr; padding:16px; gap:6px; text-align:center}
+  .id{font-size:12px}
+  .name .nolink{font-size:17px}
+  .toolbar{padding:12px; flex-direction:column}
+  select{width:100%}
 }
 </style>
 </head>
-
 <body>
 <header>
-  <div class="table-shell">
-    <div class="table-head">
-      <div>MAP ID</div>
-      <div>MAP NAME</div>
+  <div class="container nav">
+    <div class="brand">
+      <div class="logo-container">
+        <!-- Logo file placeholder. Change 'logo.png' to match your actual file filename image when uploading to your directory. -->
+        <img class="logo-img" src="logo.png" alt="W3Arena Logo">
+      </div>
+      <div>
+        <div class="brand-title">W3Arena</div>
+        <div class="brand-sub">Map Registry Engine // Live Data</div>
+      </div>
     </div>
-    <div id="mapRows">
-      <div class="loading">LOADING MAP DATABASE...</div>
-    </div>
+    <div class="nav-tag">LIVE PLATFORM</div>
   </div>
+</header>
 
-  <div class="pagination">
-    <button id="prevBtn" class="page-btn" disabled>← PREVIOUS</button>
-    <div id="pageInfo" class="page-info">PAGE — / —</div>
-    <button id="nextBtn" class="page-btn" disabled>NEXT →</button>
-  </div>
+<main class="container">
+  <section class="hero">
+    <div class="kicker">COMMUNITY RESOURCE CORE</div>
+    <h1>AVAILABLE MAPS</h1>
+    <p>
+      An optimized index engine tracking official custom map files accepted for hosting across the W3Arena node networks.
+      <small>Un índice de los mapas disponibles actualmente para jugar en W3Arena.</small>
+    </p>
+    <div class="stats">
+      <div class="stat"><b id="total">0</b><span>TOTAL CATALOG</span></div>
+      <div class="stat"><b id="shown">0</b><span>MATCHED RUNS</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="toolbar">
+      <div class="search-wrap"><span>⌕</span><input id="search" type="search" placeholder="Filter records by unique ID or string title..." autocomplete="off"></div>
+      <select id="sort" aria-label="Sort dataset">
+        <option value="id-asc">SORT INDEX: ID ASCENDING</option>
+        <option value="id-desc">SORT INDEX: ID DESCENDING</option>
+        <option value="name-asc">SORT INDEX: TITLE A-Z</option>
+        <option value="name-desc">SORT INDEX: TITLE Z-A</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <div class="table-head"><div>INDEX MAP ID</div><div>FILE RECOGNITION NAME</div></div>
+      <div id="list"><div class="loading">CONNECTING DATA STREAM STORAGE BLOCKS...</div></div>
+      <div id="empty" class="empty">NO CORRESPONDING RECORDS EXIST</div>
+    </div>
+  </section>
 </main>
 
 <footer>
-  <div class="wrap">
-    W3ARENA MAP DATABASE<br>
-    <span style="color:#4a5461;">Community-maintained directory. Not an official W3Arena website.</span>
-  </div>
+  <strong>W3ARENA DATA HUB V2</strong><br><br>
+  Open index data block processing architecture.<br>Independent client catalog.
 </footer>
 
 <script>
-// CONFIGURATION
-const CONFIG = {
-  CSV_URL: "maps.csv", // Loads your local GitHub file directly!
-  ITEMS_PER_PAGE: 15
-};
-
+const CSV_URL = "maps.csv"; 
 let allMaps = [];
 let filteredMaps = [];
-let currentPage = 1;
 
-// DOM ELEMENTS
-const mapRows = document.getElementById('mapRows');
-const errorBox = document.getElementById('errorBox');
-const searchInput = document.getElementById('search');
-const totalMapsEl = document.getElementById('totalMaps');
-const totalLinksEl = document.getElementById('totalLinks');
-const showingEl = document.getElementById('showing');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const pageInfo = document.getElementById('pageInfo');
-
-// HELPER FUNCTION TO PARSE RAW CSV ROWS SAFE & FAST
 function parseCSV(text) {
   const lines = text.split('\n');
   const result = [];
-  
-  // Skip row 0 (headers) and process data
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
     if (!line) continue;
-    
-    // Find the first comma to split Map ID from Map Name safely
     const commaIndex = line.indexOf(',');
     if (commaIndex === -1) continue;
-    
     const id = line.substring(0, commaIndex).replace(/['"]/g, '').trim();
     const name = line.substring(commaIndex + 1).replace(/['"]/g, '').trim();
-    
-    result.push({ id, name });
+    if(id || name) {
+      result.push({ id: id, name: name });
+    }
   }
   return result;
 }
 
-// FETCH DATA DIRECTLY FROM GITHUB STORAGE
 async function loadDatabase() {
+  const listEl = document.getElementById('list');
   try {
-    const response = await fetch(CONFIG.CSV_URL);
-    if (!response.ok) throw new Error("Could not find maps.csv file");
-    
+    const response = await fetch(CSV_URL);
+    if (!response.ok) throw new Error("File missing");
     const rawText = await response.text();
     allMaps = parseCSV(rawText);
     filteredMaps = [...allMaps];
     
-    if(totalMapsEl) totalMapsEl.textContent = allMaps.length;
-    if(totalLinksEl) totalLinksEl.textContent = allMaps.length; 
-    if(showingEl) showingEl.textContent = filteredMaps.length;
-
-    renderPage();
-    setupEventListeners();
+    document.getElementById('total').textContent = allMaps.length;
+    applyFiltersAndSort();
   } catch (err) {
-    console.error("Local Load Error: ", err);
-    if (errorBox) {
-      errorBox.textContent = "Could not load the local maps.csv file. Make sure the file exists in your repository.";
-      errorBox.hidden = false;
-    }
-    mapRows.innerHTML = '<div class="empty">DATABASE CONNECTION ERROR</div>';
+    console.warn(err);
+    listEl.innerHTML = '<div class="empty" style="display:block;color:#ffa3a3;border-color:var(--w3a-red);">CORS CROSS-ORIGIN DEFENSE: Push your local modifications directly onto your online GitHub repository to run database fetch requests live!</div>';
   }
 }
 
-function renderPage() {
-  const totalPages = Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE) || 1;
-  if (currentPage > totalPages) currentPage = totalPages;
-
-  const start = (currentPage - 1) * CONFIG.ITEMS_PER_PAGE;
-  const end = start + CONFIG.ITEMS_PER_PAGE;
-  const pageItems = filteredMaps.slice(start, end);
-
-  if (pageItems.length === 0) {
-    mapRows.innerHTML = '<div class="empty">NO MATCHING MAPS FOUND</div>';
-    if(pageInfo) pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
-    if(prevBtn) prevBtn.disabled = true;
-    if(nextBtn) nextBtn.disabled = true;
+function renderTable() {
+  const listEl = document.getElementById('list');
+  const emptyEl = document.getElementById('empty');
+  document.getElementById('shown').textContent = filteredMaps.length;
+  
+  if (filteredMaps.length === 0) {
+    listEl.innerHTML = '';
+    emptyEl.style.display = 'block';
     return;
   }
-
-  mapRows.innerHTML = pageItems.map(map => `
-    <div class="row" style="grid-template-columns: 150px minmax(0, 1fr); display: grid; align-items: center; min-height: 62px; padding: 0 18px; border-bottom: 1px solid #1b2128;">
-      <div class="id" style="font-family: 'Share Tech Mono', monospace; color: #9aa6b2; font-size: 13px;">${map.id}</div>
-      <div class="map-name" style="overflow: hidden;">
-        <span class="no-link" style="color: #edf2f7; font-size: 16px; font-weight: 600;">${map.name}</span>
-      </div>
+  emptyEl.style.display = 'none';
+  
+  listEl.innerHTML = filteredMaps.map(map => `
+    <div class="row">
+      <div class="id"># ${map.id}</div>
+      <div class="name"><span class="nolink">${map.name}</span></div>
     </div>
   `).join('');
-
-  if(pageInfo) pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
-  if(prevBtn) prevBtn.disabled = currentPage === 1;
-  if(nextBtn) nextBtn.disabled = currentPage === totalPages;
 }
 
-function setupEventListeners() {
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      const term = e.target.value.toLowerCase().trim();
-      filteredMaps = allMaps.filter(map => 
-        map.id.toString().toLowerCase().includes(term) || 
-        map.name.toLowerCase().includes(term)
-      );
-      currentPage = 1;
-      if(showingEl) showingEl.textContent = filteredMaps.length;
-      renderPage();
-    });
-  }
-
-  if(prevBtn) { prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); } }; }
-  if(nextBtn) { nextBtn.onclick = () => { if (currentPage < Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE)) { currentPage++; renderPage(); } }; }
-}
-
-// Direct Execution
-loadDatabase();
-</script>
-</body>
-</html>
+function applyFiltersAndSort() {
+  const term = document.getElementById('search').value.toLowerCase().trim();
+  const sortType = document.getElementById('sort').value;
+  filteredMaps = allMaps.filter(map =>map.id.toString().toLowerCase().includes(term) ||map.name.toLowerCase().includes(term));
+  filteredMaps.sort((a, b) => {if (sortType === 'id-asc') return parseInt(a.id) - parseInt(b.id);if (sortType === 'id-desc') return parseInt(b.id) - parseInt(a.id);
+                               if (sortType === 'name-asc') return a.name.localeCompare(b.name);if (sortType === 'name-desc') return b.name.localeCompare(a.name);
+                               return 0;});renderTable();}document.getElementById('search').addEventListener('input', applyFiltersAndSort);document.getElementById('sort').addEventListener('change', applyFiltersAndSort);loadDatabase();
