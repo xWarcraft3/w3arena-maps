@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>W3Arena Map Database</title>
+<meta name="description" content="Community-maintained W3Arena Warcraft III map database.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#080a0d;
+  --panel:#0d1116;
+  --panel2:#11161d;
+  --line:#252c35;
+  --text:#edf2f7;
+  --muted:#8b96a3;
+  --accent:#d8e0e8;
+  --accent2:#7d8b99;
+  --green:#5ee6a8;
+  --danger:#ff6b6b;
+  --shadow:0 18px 50px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:
+    radial-gradient(circle at 50% -10%,rgba(255,255,255,.07),transparent 35%),
+    linear-gradient(180deg,#0a0c10 0%,var(--bg) 42%,#07090c 100%);
+  color:var(--text);
+  font-family:Rajdhani,Arial,sans-serif;
+  min-height:100vh;
+}
+body:before{
+  content:"";
+  position:fixed; inset:0; pointer-events:none; opacity:.28;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+  background-size:38px 38px;
+  mask-image:linear-gradient(to bottom,black,transparent 75%);
+}
+a{color:inherit}
+.wrap{width:min(1120px,calc(100% - 32px));margin:auto}
+
+header{
+  padding:42px 0 28px;
+  border-bottom:1px solid var(--line);
+  text-align:center;
+}
+.brand-mark{
+  width:76px;height:76px;margin:0 auto 15px;
+  border:1px solid #48515c;border-radius:18px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,#171d24,#090c10);
+  box-shadow:0 10px 35px rgba(0,0,0,.45),inset 0 0 25px rgba(255,255,255,.035);
+  overflow:hidden;
+}
+.brand-mark img{width:62px;height:62px;object-fit:contain}
+.brand-fallback{
+  font-family:"Share Tech Mono",monospace;
+  font-size:18px;font-weight:bold;letter-spacing:-1px;
+}
+.brand-name{
+  font-size:30px;font-weight:700;letter-spacing:.14em;
+}
+.kicker{
+  margin-top:5px;color:var(--muted);
+  font:12px "Share Tech Mono",monospace;letter-spacing:.14em;
+}
+
+.hero{padding:58px 0 28px}
+.eyebrow{
+  color:var(--accent2);
+  font:12px "Share Tech Mono",monospace;
+  letter-spacing:.18em;margin-bottom:12px;
+}
+h1{
+  margin:0;font-size:clamp(38px,7vw,72px);
+  line-height:.9;letter-spacing:.025em;
+  text-transform:uppercase;
+}
+.hero p{
+  max-width:720px;color:#aeb7c1;
+  font-size:17px;line-height:1.55;margin:20px 0 18px;
+}
+.hero .sub{font-size:14px;color:#6f7a86;margin-top:-8px}
+.download{
+  display:inline-flex;align-items:center;gap:9px;
+  margin-top:4px;padding:10px 15px;
+  border:1px solid #39434e;border-radius:7px;
+  text-decoration:none;color:#e8edf2;
+  font-weight:600;letter-spacing:.04em;
+  background:#10151b;transition:.2s;
+}
+.download:hover{border-color:#697684;background:#171d24;transform:translateY(-1px)}
+
+.stats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:10px;margin:20px 0 28px;
+}
+.stat{
+  background:rgba(13,17,22,.82);border:1px solid var(--line);
+  padding:16px 18px;border-radius:8px;
+}
+.stat .num{font:24px "Share Tech Mono",monospace}
+.stat .label{
+  color:#737f8b;font:10px "Share Tech Mono",monospace;
+  letter-spacing:.14em;margin-top:4px;
+}
+
+.toolbar{
+  display:flex;gap:10px;align-items:center;
+  margin-bottom:12px;
+}
+.search{
+  flex:1;min-width:0;
+  background:#0d1217;border:1px solid var(--line);
+  color:var(--text);border-radius:7px;
+  padding:13px 14px;outline:none;
+  font:15px Rajdhani,Arial,sans-serif;
+}
+.search:focus{border-color:#596674;box-shadow:0 0 0 3px rgba(120,135,150,.08)}
+select{
+  width:190px;background:#0d1217;color:#dce3e9;
+  border:1px solid var(--line);border-radius:7px;
+  padding:12px;font:14px Rajdhani,Arial,sans-serif;
+}
+
+.table-shell{
+  border:1px solid var(--line);border-radius:9px;
+  overflow:hidden;background:rgba(13,17,22,.88);
+  box-shadow:var(--shadow);
+}
+.table-head,.row{
+  display:grid;grid-template-columns:150px minmax(0,1fr) 190px;
+  align-items:center;
+}
+.table-head{
+  background:#11161c;color:#6f7b87;
+  font:10px "Share Tech Mono",monospace;
+  letter-spacing:.15em;padding:12px 18px;
+  border-bottom:1px solid var(--line);
+}
+.row{
+  min-height:62px;padding:0 18px;border-bottom:1px solid #1b2128;
+}
+.row:last-child{border-bottom:0}
+.row:hover{background:#11171d}
+.id{font-family:"Share Tech Mono",monospace;color:#9aa6b2;font-size:13px}
+.map-link{text-decoration:none;color:#edf2f7;font-size:16px;font-weight:600;overflow-wrap:anywhere}
+.map-link:hover{text-decoration:underline;text-underline-offset:3px}
+.map-name{overflow:hidden}
+.no-link{color:#a8b1ba;font-size:16px;font-weight:600}
+.status{
+  justify-self:start;
+  display:inline-flex;align-items:center;gap:8px;
+  color:var(--green);font:11px "Share Tech Mono",monospace;
+  letter-spacing:.08em;
+}
+.status:before{
+  content:"";width:7px;height:7px;border-radius:50%;
+  background:var(--green);box-shadow:0 0 9px var(--green);
+}
+.status.incompatible,.status.unavailable,.status.outdated{color:var(--danger)}
+.status.incompatible:before,.status.unavailable:before,.status.outdated:before{
+  background:var(--danger);box-shadow:0 0 9px var(--danger)
+}
+.status.unknown{color:#c5ccd3}
+.status.unknown:before{background:#8a949e;box-shadow:none}
+
+.empty{
+  padding:42px 20px;text-align:center;color:#707b86;
+  font:12px "Share Tech Mono",monospace;letter-spacing:.08em;
+}
+.pagination{
+  display:flex;align-items:center;justify-content:center;
+  gap:12px;padding:20px 0 42px;
+}
+.page-btn{
+  border:1px solid var(--line);background:#0d1217;color:#dce3e9;
+  border-radius:6px;padding:9px 14px;cursor:pointer;
+  font:13px "Share Tech Mono",monospace;
+}
+.page-btn:hover:not(:disabled){background:#161c23;border-color:#596674}
+.page-btn:disabled{opacity:.35;cursor:not-allowed}
+.page-info{color:#7d8791;font:11px "Share Tech Mono",monospace;min-width:120px;text-align:center}
+
+footer{
+  border-top:1px solid var(--line);padding:22px 0 30px;
+  color:#626d78;font:11px "Share Tech Mono",monospace;
+  text-align:center;line-height:1.7;
+}
+.loading{padding:45px 20px;text-align:center;color:#77828d;font:12px "Share Tech Mono",monospace}
+.error{
+  margin:0 0 22px;padding:14px;border:1px solid #4b2b2b;
+  background:#171011;color:#ff9b9b;border-radius:7px;
+  font:12px "Share Tech Mono",monospace;line-height:1.5;
+}
+
+@media(max-width:700px){
+  .wrap{width:min(100% - 20px,1120px)}
+  header{padding-top:28px}
+  .hero{padding-top:42px}
+  .stats{grid-template-columns:1fr}
+  .toolbar{flex-direction:column}
+  .search,select{width:100%}
+  .table-head{display:none}
+  .row{
+    grid-template-columns:1fr;
+    gap:8px;padding:15px 16px;min-height:0;
+  }
+  .status{margin-top:3px}
+}
+</style>
+</head>
+
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand-mark" aria-label="W3Arena">
+      <!-- Replace the image URL below with the official W3Arena logo asset if desired. -->
+      <div class="brand-fallback">W3A</div>
+    </div>
+    <div class="brand-name">W3ARENA</div>
+    <div class="kicker">MAP DATABASE // COMMUNITY INDEX</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <div class="eyebrow">WARCRAFT III // MAP DIRECTORY</div>
+    <h1>AVAILABLE MAPS</h1>
+    <p>A clean, searchable index of maps currently listed for play on the W3Arena platform.</p>
+    <p class="sub">Un índice limpio y fácil de buscar de los mapas disponibles actualmente para jugar en W3Arena.</p>
+    <a class="download" href="https://www.w3arena.pro/" target="_blank" rel="noopener noreferrer">
+      Download W3Arena · Descargar W3Arena ↗
+    </a>
+  </section>
+
+  <div id="errorBox" class="error" hidden></div>
+
+  <section class="stats" aria-label="Map statistics">
+    <div class="stat"><div class="num" id="totalMaps">—</div><div class="label">TOTAL MAPS</div></div>
+    <div class="stat"><div class="num" id="totalLinks">—</div><div class="label">MAP LINKS</div></div>
+    <div class="stat"><div class="num" id="showing">—</div><div class="label">SHOWING</div></div>
+  </section>
+
+  <div class="toolbar">
+    <input id="search" class="search" type="search" placeholder="Search Map ID or Map Name..." autocomplete="off">
+    <select id="sort">
+      <option value="id-asc">Map ID A-Z</option>
+      <option value="id-desc">Map ID Z-A</option>
+      <option value="name-asc">Map Name A-Z</option>
+      <option value="name-desc">Map Name Z-A</option>
+    </select>
+  </div>
+
+  <section class="table-shell">
+    <div class="table-head">
+      <div>MAP ID</div><div>MAP NAME</div><div>STATUS</div>
+    </div>
+    <div id="mapList"><div class="loading">LOADING MAP DATABASE...</div></div>
+  </section>
+
+  <div class="pagination">
+    <button class="page-btn" id="prev" type="button">← PREVIOUS</button>
+    <div class="page-info" id="pageInfo">PAGE — / —</div>
+    <button class="page-btn" id="next" type="button">NEXT →</button>
+  </div>
+</main>
+
+<footer>
+  <div>W3ARENA MAP DATABASE</div>
+  <div>Community-maintained directory. Not an official W3Arena website.</div>
+</footer>
+
+<script>
+/*
+  GITHUB PAGES SETUP:
+  1. Create a Google Sheet with a tab named "Maps".
+  2. Import w3arena_maps_google_sheet.csv into it.
+  3. Add/update rows directly in the Sheet from then on.
+  4. Deploy Code.gs as a Google Apps Script Web App.
+  5. Paste its /exec URL below.
+*/
+const CONFIG = {
+  API_URL: "PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE",
+  MAPS_PER_PAGE: 20
+};
+
+let maps = [];
+let filtered = [];
+let page = 1;
+
+const $ = id => document.getElementById(id);
+
+function clean(v){ return String(v ?? "").trim(); }
+
+function statusClass(status){
+  const s = clean(status).toUpperCase();
+  if(s === "AVAILABLE") return "status";
+  if(s === "NOT COMPATIBLE") return "status incompatible";
+  if(s === "UNAVAILABLE") return "status unavailable";
+  if(s === "OUTDATED") return "status outdated";
+  return "status unknown";
+}
+
+function normalizeMap(m){
+  return {
+    id: clean(m["Map ID"]),
+    name: clean(m["Map Name"]),
+    link: clean(m["Link"]),
+    status: clean(m["Status"]) || "AVAILABLE"
+  };
+}
+
+async function loadMaps(){
+  if(CONFIG.API_URL.includes("PASTE_YOUR")){
+    showError("The map database is not connected yet. Set CONFIG.API_URL in index.html to your Apps Script /exec URL.");
+    $("mapList").innerHTML = '<div class="empty">MAP DATABASE NOT CONNECTED</div>';
+    return;
+  }
+
+  try{
+    const response = await fetch(CONFIG.API_URL, {cache:"no-store"});
+    if(!response.ok) throw new Error("HTTP " + response.status);
+    const data = await response.json();
+    if(!Array.isArray(data)) throw new Error("Invalid API response.");
+    maps = data.map(normalizeMap).filter(m => m.id || m.name);
+    hideError();
+    apply();
+  }catch(err){
+    showError("Could not load the Google Sheet data. Check that the Apps Script Web App is deployed for public access and that CONFIG.API_URL is correct.");
+    $("mapList").innerHTML = '<div class="empty">UNABLE TO LOAD MAP DATABASE</div>';
+    console.error(err);
+  }
+}
+
+function apply(){
+  const q = clean($("search").value).toLowerCase();
+  filtered = maps.filter(m =>
+    m.id.toLowerCase().includes(q) ||
+    m.name.toLowerCase().includes(q)
+  );
+
+  const sort = $("sort").value;
+  filtered.sort((a,b) => {
+    if(sort.startsWith("id")){
+      const aa = a.id.localeCompare(b.id, undefined, {numeric:true});
+      return sort === "id-asc" ? aa : -aa;
+    }
+    const aa = a.name.localeCompare(b.name, undefined, {numeric:true, sensitivity:"base"});
+    return sort === "name-asc" ? aa : -aa;
+  });
+
+  const pages = Math.max(1, Math.ceil(filtered.length / CONFIG.MAPS_PER_PAGE));
+  page = Math.min(page, pages);
+  render();
+}
+
+function render(){
+  const start = (page - 1) * CONFIG.MAPS_PER_PAGE;
+  const items = filtered.slice(start, start + CONFIG.MAPS_PER_PAGE);
+  const pages = Math.max(1, Math.ceil(filtered.length / CONFIG.MAPS_PER_PAGE));
+
+  $("totalMaps").textContent = maps.length;
+  $("totalLinks").textContent = maps.filter(m => m.link).length;
+  $("showing").textContent = items.length;
+
+  $("pageInfo").textContent = `PAGE ${page} / ${pages}`;
+  $("prev").disabled = page <= 1;
+  $("next").disabled = page >= pages;
+
+  if(!items.length){
+    $("mapList").innerHTML = '<div class="empty">NO MAPS FOUND</div>';
+    return;
+  }
+
+  $("mapList").innerHTML = items.map(m => {
+    const name = escapeHtml(m.name || "Unnamed Map");
+    const id = escapeHtml(m.id || "—");
+    const status = escapeHtml(m.status.toUpperCase());
+    const cls = statusClass(m.status);
+
+    const mapName = m.link
+      ? `<a class="map-link" href="${escapeAttr(m.link)}" target="_blank" rel="noopener noreferrer">${name} ↗</a>`
+      : `<span class="no-link">${name}</span>`;
+
+    return `
+      <div class="row">
+        <div class="id">${id}</div>
+        <div class="map-name">${mapName}</div>
+        <div><div class="${cls}">${status}</div></div>
+      </div>`;
+  }).join("");
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  }[c]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+
+function showError(msg){
+  $("errorBox").textContent = msg;
+  $("errorBox").hidden = false;
+}
+function hideError(){ $("errorBox").hidden = true; }
+
+$("search").addEventListener("input", () => { page = 1; apply(); });
+$("sort").addEventListener("change", () => { page = 1; apply(); });
+$("prev").addEventListener("click", () => { if(page > 1){ page--; render(); window.scrollTo({top:document.querySelector(".table-shell").offsetTop - 20,behavior:"smooth"}); }});
+$("next").addEventListener("click", () => {
+  const pages = Math.max(1, Math.ceil(filtered.length / CONFIG.MAPS_PER_PAGE));
+  if(page < pages){ page++; render(); window.scrollTo({top:document.querySelector(".table-shell").offsetTop - 20,behavior:"smooth"}); }
+});
+
+loadMaps();
+</script>
+</body>
+</html>
