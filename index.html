@@ -247,7 +247,7 @@ footer{
 <script>
 // CONFIGURATION
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec",
+  API_URL: "PASTE_YOUR_WORKING_GOOGLE_EXEC_URL_HERE",
   ITEMS_PER_PAGE: 15
 };
 
@@ -275,28 +275,29 @@ async function loadDatabase() {
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0) throw new Error("Invalid or empty data returned");
 
-    // Map rows ignoring any missing status properties completely
+    // Clean data parsing mapping setup blocks
     allMaps = data.map(item => ({
       id: item.map_id || "—",
       name: item.map_name || "Untitled Map"
     })).filter(item => item.id !== "—" || item.name !== "Untitled Map");
 
     filteredMaps = [...allMaps];
-    updateStats();
+    
+    // Safety verification check on global dashboard components
+    if(totalMapsEl) totalMapsEl.textContent = allMaps.length;
+    if(totalLinksEl) totalLinksEl.textContent = allMaps.length; 
+    if(showingEl) showingEl.textContent = filteredMaps.length;
+
     renderPage();
     setupEventListeners();
   } catch (err) {
     console.error(err);
-    errorBox.textContent = "Could not load the Google Sheet data. Check that the Apps Script Web App is deployed for public access and that CONFIG.API_URL is correct.";
-    errorBox.hidden = false;
+    if (errorBox) {
+      errorBox.textContent = "Database communication link failed. Please check endpoint configurations.";
+      errorBox.hidden = false;
+    }
     mapRows.innerHTML = '<div class="empty">DATABASE CONNECTION ERROR</div>';
   }
-}
-
-function updateStats() {
-  totalMapsEl.textContent = allMaps.length;
-  totalLinksEl.textContent = "0"; // Removed status column tracking
-  showingEl.textContent = filteredMaps.length;
 }
 
 function renderPage() {
@@ -309,49 +310,48 @@ function renderPage() {
 
   if (pageItems.length === 0) {
     mapRows.innerHTML = '<div class="empty">NO MATCHING MAPS FOUND</div>';
-    pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
-    prevBtn.disabled = true;
-    nextBtn.disabled = true;
+    if(pageInfo) pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
+    if(prevBtn) prevBtn.disabled = true;
+    if(nextBtn) nextBtn.disabled = true;
     return;
   }
 
-  // Generate clean 2-column layout row blocks dynamically
+  // Pure clean layout mapping execution structure
   mapRows.innerHTML = pageItems.map(map => `
-    <div class="row" style="grid-template-columns: 150px minmax(0, 1fr);">
-      <div class="id">${map.id}</div>
-      <div class="map-name">
-        <span class="no-link">${map.name}</span>
+    <div class="row" style="grid-template-columns: 150px minmax(0, 1fr); display: grid; align-items: center; min-height: 62px; padding: 0 18px; border-bottom: 1px solid #1b2128;">
+      <div class="id" style="font-family: 'Share Tech Mono', monospace; color: #9aa6b2; font-size: 13px;">${map.id}</div>
+      <div class="map-name" style="overflow: hidden;">
+        <span class="no-link" style="color: #edf2f7; font-size: 16px; font-weight: 600;">${map.name}</span>
       </div>
     </div>
   `).join('');
 
-  pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
-  prevBtn.disabled = currentPage === 1;
-  nextBtn.disabled = currentPage === totalPages;
+  if(pageInfo) pageInfo.textContent = `PAGE ${currentPage} / ${totalPages}`;
+  if(prevBtn) prevBtn.disabled = currentPage === 1;
+  if(nextBtn) nextBtn.disabled = currentPage === totalPages;
 }
 
 function setupEventListeners() {
-  searchInput.addEventListener('input', (e) => {
-    const term = e.target.value.toLowerCase().trim();
-    filteredMaps = allMaps.filter(map => 
-      map.id.toString().toLowerCase().includes(term) || 
-      map.name.toLowerCase().includes(term)
-    );
-    currentPage = 1;
-    showingEl.textContent = filteredMaps.length;
-    renderPage();
-  });
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const term = e.target.value.toLowerCase().trim();
+      filteredMaps = allMaps.filter(map => 
+        map.id.toString().toLowerCase().includes(term) || 
+        map.name.toLowerCase().includes(term)
+      );
+      currentPage = 1;
+      if(showingEl) showingEl.textContent = filteredMaps.length;
+      renderPage();
+    });
+  }
 
-  prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); } };
-  nextBtn.onclick = () => { if (currentPage < Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE)) { currentPage++; renderPage(); } };
+  if(prevBtn) { prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; renderPage(); } }; }
+  if(nextBtn) { nextBtn.onclick = () => { if (currentPage < Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE)) { currentPage++; renderPage(); } }; }
 }
 
-// Initializing loader execution block
+// Initialization check execution wrapper blocks
 if (CONFIG.API_URL && CONFIG.API_URL !== "https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec") {
   loadDatabase();
-} else {
-  errorBox.textContent = "Please set your deployed Google Apps Script URL string inside the CONFIG object configuration block.";
-  errorBox.hidden = false;
 }
 </script>
 </body>
