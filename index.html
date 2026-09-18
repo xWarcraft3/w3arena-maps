@@ -247,7 +247,7 @@ footer{
 <script>
 // CONFIGURATION
 const CONFIG = {
-  API_URL: "https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec",
+  CSV_URL: "maps.csv", // Loads your local GitHub file directly!
   ITEMS_PER_PAGE: 15
 };
 
@@ -266,26 +266,36 @@ const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
 const pageInfo = document.getElementById('pageInfo');
 
-// FETCH DATA FROM GOOGLE SHEETS
+// HELPER FUNCTION TO PARSE RAW CSV ROWS SAFE & FAST
+function parseCSV(text) {
+  const lines = text.split('\n');
+  const result = [];
+  
+  // Skip row 0 (headers) and process data
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    // Find the first comma to split Map ID from Map Name safely
+    const commaIndex = line.indexOf(',');
+    if (commaIndex === -1) continue;
+    
+    const id = line.substring(0, commaIndex).replace(/['"]/g, '').trim();
+    const name = line.substring(commaIndex + 1).replace(/['"]/g, '').trim();
+    
+    result.push({ id, name });
+  }
+  return result;
+}
+
+// FETCH DATA DIRECTLY FROM GITHUB STORAGE
 async function loadDatabase() {
   try {
-    // Added 'cors' mode and redirect parameters to clear the stuck loading state
-    const response = await fetch(CONFIG.API_URL, {
-      method: 'GET',
-      mode: 'cors',
-      redirect: 'follow'
-    });
+    const response = await fetch(CONFIG.CSV_URL);
+    if (!response.ok) throw new Error("Could not find maps.csv file");
     
-    if (!response.ok) throw new Error("Network connection response failed");
-    
-    const data = await response.json();
-    if (!Array.isArray(data) || data.length === 0) throw new Error("Invalid or empty data returned");
-
-    allMaps = data.map(item => ({
-      id: item.map_id || "—",
-      name: item.map_name || "Untitled Map"
-    })).filter(item => item.id !== "—" || item.name !== "Untitled Map");
-
+    const rawText = await response.text();
+    allMaps = parseCSV(rawText);
     filteredMaps = [...allMaps];
     
     if(totalMapsEl) totalMapsEl.textContent = allMaps.length;
@@ -295,14 +305,15 @@ async function loadDatabase() {
     renderPage();
     setupEventListeners();
   } catch (err) {
-    console.error("Fetch Error Detail: ", err);
+    console.error("Local Load Error: ", err);
     if (errorBox) {
-      errorBox.textContent = "Database communication link failed. Please check endpoint configurations.";
+      errorBox.textContent = "Could not load the local maps.csv file. Make sure the file exists in your repository.";
       errorBox.hidden = false;
     }
     mapRows.innerHTML = '<div class="empty">DATABASE CONNECTION ERROR</div>';
   }
 }
+
 function renderPage() {
   const totalPages = Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE) || 1;
   if (currentPage > totalPages) currentPage = totalPages;
@@ -319,7 +330,6 @@ function renderPage() {
     return;
   }
 
-  // Pure clean layout mapping execution structure
   mapRows.innerHTML = pageItems.map(map => `
     <div class="row" style="grid-template-columns: 150px minmax(0, 1fr); display: grid; align-items: center; min-height: 62px; padding: 0 18px; border-bottom: 1px solid #1b2128;">
       <div class="id" style="font-family: 'Share Tech Mono', monospace; color: #9aa6b2; font-size: 13px;">${map.id}</div>
@@ -352,10 +362,8 @@ function setupEventListeners() {
   if(nextBtn) { nextBtn.onclick = () => { if (currentPage < Math.ceil(filteredMaps.length / CONFIG.ITEMS_PER_PAGE)) { currentPage++; renderPage(); } }; }
 }
 
-// Initialization check execution wrapper blocks
-if (CONFIG.API_URL && CONFIG.API_URL !== "https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec") {
-  loadDatabase();
-}
+// Direct Execution
+loadDatabase();
 </script>
 </body>
 </html>
