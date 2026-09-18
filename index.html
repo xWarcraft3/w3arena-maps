@@ -347,7 +347,7 @@ function setupEventListeners() {
 }
 
 // Initializing loader execution block
-if (CONFIG.API_URL && CONFIG.API_URL !== "YOUR_GOOGLE_APPS_SCRIPT_EXEC_URL_HERE") {
+if (CONFIG.API_URL && CONFIG.API_URL !== "https://script.google.com/macros/s/AKfycbzHAX39BWa3jCNzkimbCijP0Jh80B5lgmz6VGnrWjDxZ5ei_WvOti7UjHgvEueDEXXB/exec") {
   loadDatabase();
 } else {
   errorBox.textContent = "Please set your deployed Google Apps Script URL string inside the CONFIG object configuration block.";
