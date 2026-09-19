@@ -40,34 +40,83 @@ header{
   border-bottom:1px solid var(--line); background:rgba(11,13,18,0.7);
   backdrop-filter:blur(20px); position:sticky; top:0; z-index:10;
 }
-.nav{height:84px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.brand{display:flex;align-items:center;gap:16px}
-.logo-container {
-  position: relative;
-  width: 54px; height: 54px;
-  border-radius: 50%;
-  padding: 2px;
-  background: linear-gradient(180deg, var(--line), transparent);
-  box-shadow: 0 0 20px var(--accent-glow);
-}
-.logo-img {
-  width: 100%; height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
-  background: #000;
-}
-.brand-title{font-weight:700;letter-spacing:3px;font-size:22px;color:#fff;text-transform:uppercase}
-.brand-sub{font-family:"Share Tech Mono",monospace;color:var(--muted);font-size:10px;letter-spacing:2px;margin-top:4px}
-.nav-tag{
-  font-family:"Share Tech Mono",monospace; font-size:11px; color:#fff;
-  background:rgba(255,51,51,0.15); border:1px solid rgba(255,51,51,0.3);
-  padding:4px 10px; border-radius:4px; letter-spacing:1px;
+.nav{
+  height:92px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
 }
 
-.hero{padding:60px 0 40px; text-align:center}
-.kicker{font-family:"Share Tech Mono",monospace;color:var(--muted);font-size:12px;letter-spacing:4px;text-transform:uppercase}
-h1{font-size:clamp(46px,8vw,82px);line-height:1;margin:16px 0;letter-spacing:-1px;font-weight:700;text-transform:uppercase}
-.hero p{max-width:620px;color:var(--muted);font-size:18px;margin:0 auto;line-height:1.5}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+
+.logo-container{
+  position:relative;
+  width:68px;
+  height:68px;
+  border-radius:50%;
+  padding:2px;
+  background:linear-gradient(180deg,var(--line),transparent);
+  box-shadow:0 0 24px var(--accent-glow);
+}
+
+.logo-img{
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  object-fit:cover;
+  background:#000;
+}
+
+.brand-title{
+  font-weight:700;
+  letter-spacing:3px;
+  font-size:25px;
+  color:#fff;
+  text-transform:uppercase;
+}
+
+.brand-sub{
+  font-family:"Share Tech Mono",monospace;
+  color:var(--muted);
+  font-size:10px;
+  letter-spacing:2px;
+  margin-top:5px;
+}
+
+.hero{
+  padding:52px 0 36px;
+  text-align:center;
+}
+
+.kicker{
+  font-family:"Share Tech Mono",monospace;
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:4px;
+  text-transform:uppercase;
+}
+
+h1{
+  font-size:clamp(42px,5vw,64px);
+  line-height:1;
+  margin:14px 0 18px;
+  letter-spacing:0;
+  font-weight:700;
+  text-transform:uppercase;
+}
+
+.hero p{
+  max-width:620px;
+  color:var(--muted);
+  font-size:17px;
+  margin:0 auto;
+  line-height:1.5;
+}
 .hero small{display:block;margin-top:8px;font-size:14px;opacity:0.7}
 
 .stats{display:flex;gap:16px;justify-content:center;margin-top:35px}
