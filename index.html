@@ -172,6 +172,50 @@ select{width:auto;min-width:200px;cursor:pointer}
 footer{padding:60px 0; color:var(--muted); font-family:"Share Tech Mono",monospace; font-size:11px; letter-spacing:1px; text-align:center; line-height:1.8}
 footer strong{color:#fff; letter-spacing:2px}
 
+
+.pagination{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  margin-top:18px;
+  flex-wrap:wrap;
+}
+.page-btn{
+  min-width:42px;
+  height:40px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--panel);
+  color:var(--text);
+  font:600 14px "Share Tech Mono",monospace;
+  cursor:pointer;
+  transition:all .2s ease;
+}
+.page-btn:hover:not(:disabled){
+  border-color:var(--accent);
+  color:#fff;
+  background:var(--panel-hover);
+  box-shadow:0 0 10px var(--accent-glow);
+}
+.page-btn.active{
+  border-color:var(--accent);
+  background:var(--accent);
+  color:#fff;
+  box-shadow:0 0 12px var(--accent-glow);
+}
+.page-btn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+.page-info{
+  color:var(--muted);
+  font:600 11px "Share Tech Mono",monospace;
+  letter-spacing:1px;
+  margin:0 8px;
+}
+
 @media(max-width:650px){
   .nav{height:74px}.brand-title{font-size:19px}
   .hero{padding:40px 0 20px}h1{font-size:48px}
@@ -181,6 +225,9 @@ footer strong{color:#fff; letter-spacing:2px}
   .name .nolink{font-size:17px}
   .toolbar{padding:12px; flex-direction:column}
   select{width:100%}
+  .pagination{gap:5px}
+  .page-btn{min-width:38px;height:38px;padding:0 9px;font-size:11px}
+  .page-info{font-size:9px;margin:0 3px}
 }
 </style>
 </head>
@@ -228,6 +275,7 @@ footer strong{color:#fff; letter-spacing:2px}
       <div class="table-head"><div>INDEX MAP ID</div><div>FILE RECOGNITION NAME</div></div>
       <div id="list"><div class="loading">CONNECTING DATA STREAM STORAGE BLOCKS...</div></div>
       <div id="empty" class="empty">NO CORRESPONDING RECORDS EXIST</div>
+      <div id="pagination" class="pagination" aria-label="Map pages"></div>
     </div>
   </section>
 </main>
@@ -279,35 +327,130 @@ async function loadDatabase() {
   }
 }
 
+const MAPS_PER_PAGE = 20;
+let currentPage = 1;
+
 function renderTable() {
   const listEl = document.getElementById('list');
   const emptyEl = document.getElementById('empty');
+  const paginationEl = document.getElementById('pagination');
+
   document.getElementById('shown').textContent = filteredMaps.length;
-  
+
   if (filteredMaps.length === 0) {
     if (listEl) listEl.innerHTML = '';
     if (emptyEl) emptyEl.style.display = 'block';
+    if (paginationEl) paginationEl.innerHTML = '';
     return;
   }
+
   if (emptyEl) emptyEl.style.display = 'none';
-  
-  // Re-targeted elements safely to look for the container ID list
+
+  const totalPages = Math.ceil(filteredMaps.length / MAPS_PER_PAGE);
+
+  // Keep the current page valid after filtering.
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+
+  const startIndex = (currentPage - 1) * MAPS_PER_PAGE;
+  const pageMaps = filteredMaps.slice(startIndex, startIndex + MAPS_PER_PAGE);
+
   if (listEl) {
-    listEl.innerHTML = filteredMaps.map(map => `
+    listEl.innerHTML = pageMaps.map(map => `
       <div class="row">
         <div class="id"># ${map.id}</div>
         <div class="name"><span class="nolink">${map.name}</span></div>
       </div>
     `).join('');
   }
+
+  renderPagination(totalPages);
+}
+
+function renderPagination(totalPages) {
+  const paginationEl = document.getElementById('pagination');
+  if (!paginationEl) return;
+
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = '';
+    return;
+  }
+
+  let buttons = '';
+
+  buttons += `
+    <button class="page-btn" onclick="goToPage(${currentPage - 1})"
+      ${currentPage === 1 ? 'disabled' : ''}>
+      ‹ PREV
+    </button>
+  `;
+
+  // Show page numbers. For many pages, use ellipses so the control stays compact.
+  const pages = [];
+
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+
+    if (currentPage > 4) pages.push('...');
+
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = start; i <= end; i++) pages.push(i);
+
+    if (currentPage < totalPages - 3) pages.push('...');
+
+    pages.push(totalPages);
+  }
+
+  pages.forEach(page => {
+    if (page === '...') {
+      buttons += `<span class="page-info">...</span>`;
+    } else {
+      buttons += `
+        <button class="page-btn ${page === currentPage ? 'active' : ''}"
+          onclick="goToPage(${page})"
+          aria-current="${page === currentPage ? 'page' : 'false'}">
+          ${page}
+        </button>
+      `;
+    }
+  });
+
+  buttons += `
+    <button class="page-btn" onclick="goToPage(${currentPage + 1})"
+      ${currentPage === totalPages ? 'disabled' : ''}>
+      NEXT ›
+    </button>
+  `;
+
+  buttons += `<span class="page-info">PAGE ${currentPage} / ${totalPages}</span>`;
+
+  paginationEl.innerHTML = buttons;
+}
+
+function goToPage(page) {
+  const totalPages = Math.ceil(filteredMaps.length / MAPS_PER_PAGE);
+  if (page < 1 || page > totalPages) return;
+
+  currentPage = page;
+  renderTable();
+
+  // Keep the list visible after changing pages.
+  document.getElementById('list').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
 }
 
 function applyFiltersAndSort() {
   const term = document.getElementById('search').value.toLowerCase().trim();
   const sortType = document.getElementById('sort').value;
-  
-  filteredMaps = allMaps.filter(map => 
-    map.id.toString().toLowerCase().includes(term) || 
+
+  filteredMaps = allMaps.filter(map =>
+    map.id.toString().toLowerCase().includes(term) ||
     map.name.toLowerCase().includes(term)
   );
 
@@ -319,6 +462,8 @@ function applyFiltersAndSort() {
     return 0;
   });
 
+  // A new search or sort starts from page 1.
+  currentPage = 1;
   renderTable();
 }
 
