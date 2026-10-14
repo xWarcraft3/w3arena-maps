@@ -349,6 +349,16 @@ function safeMapURL(value) {
   }
 }
 
+// Only treat URLs ending in a Warcraft map-file extension as direct file links.
+// WC3Maps/Epic War page URLs should open the host page instead of downloading HTML.
+function isDirectMapFile(value) {
+  try {
+    return /\.(w3x|w3m|w3n|zip)(?:$|\?)/i.test(new URL(value).pathname + new URL(value).search);
+  } catch (_) {
+    return false;
+  }
+}
+
 async function loadDatabase() {
   const listEl = document.getElementById('list');
   try {
@@ -401,7 +411,7 @@ function renderTable() {
       <div class="row">
         <div class="id"># ${escapeHTML(map.id)}</div>
         <div class="name"><span class="nolink">${escapeHTML(map.name)}</span></div>
-        ${safeMapURL(map.mapLink) ? `<a class="map-link" href="${escapeHTML(safeMapURL(map.mapLink))}" target="_blank" rel="noopener noreferrer" download><span>↓</span> DOWNLOAD</a>` : `<span class="map-link disabled" title="No map URL provided">NO LINK</span>`}
+        ${safeMapURL(map.mapLink) ? `<a class="map-link" href="${escapeHTML(safeMapURL(map.mapLink))}" target="_blank" rel="noopener noreferrer" ${isDirectMapFile(safeMapURL(map.mapLink)) ? 'download' : ''}><span>↓</span> ${isDirectMapFile(safeMapURL(map.mapLink)) ? 'DOWNLOAD' : 'OPEN MAP PAGE'}</a>` : `<span class="map-link disabled" title="No map URL provided">NO LINK</span>`}
       </div>
     `).join('');
   }
