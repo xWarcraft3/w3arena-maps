@@ -145,13 +145,13 @@ select{width:auto;min-width:200px;cursor:pointer}
 
 .table-wrap{background:transparent; display:flex; flex-direction:column; gap:10px}
 .table-head{
-  display:grid; grid-template-columns:140px 1fr; align-items:center;
+  display:grid; grid-template-columns:140px minmax(0, 1fr) 130px; align-items:center;
   color:var(--muted); font-family:"Share Tech Mono",monospace;
   font-size:11px; letter-spacing:2px; padding:10px 20px; text-transform:uppercase;
 }
 .row{
-  display:grid; grid-template-columns:140px 1fr; align-items:center;
-  min-height:68px; padding:12px 20px; background:var(--panel);
+  display:grid; grid-template-columns:140px minmax(0, 1fr) 130px; align-items:center;
+  gap:12px; min-height:68px; padding:12px 20px; background:var(--panel);
   border:1px solid var(--line); border-radius:8px; transition:all 0.2s ease;
 }
 .row:hover{
@@ -159,7 +159,10 @@ select{width:auto;min-width:200px;cursor:pointer}
   transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,0.4);
 }
 .id{font-family:"Share Tech Mono",monospace;color:var(--muted);font-size:14px;font-weight:600}
-.name .nolink{font-weight:700;font-size:19px;color:#fff;letter-spacing:0.5px}
+.name .nolink{font-weight:700;font-size:19px;color:#fff;letter-spacing:0.5px;overflow-wrap:anywhere}
+.map-link{justify-self:start;display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid var(--accent);border-radius:6px;color:#8fc7ff;text-decoration:none;font:600 12px "Share Tech Mono",monospace;white-space:nowrap;transition:all .2s ease}
+.map-link:hover{background:var(--accent);color:#fff;box-shadow:0 0 12px var(--accent-glow)}
+.map-link.disabled{border-color:var(--line);color:var(--muted);cursor:default}
 .empty{
   padding:60px; text-align:center; color:var(--muted); background:var(--panel);
   border:1px solid var(--line); border-radius:8px; font-size:16px; display:none;
@@ -220,9 +223,11 @@ footer strong{color:#fff; letter-spacing:2px}
   .nav{height:74px}.brand-title{font-size:19px}
   .hero{padding:40px 0 20px}h1{font-size:48px}
   .table-head{display:none}
-  .row{grid-template-columns:1fr; padding:16px; gap:6px; text-align:center}
+  .table-head{display:none}
+  .row{grid-template-columns:1fr; padding:16px; gap:10px; text-align:center}
   .id{font-size:12px}
   .name .nolink{font-size:17px}
+  .map-link{justify-self:center}
   .toolbar{padding:12px; flex-direction:column}
   select{width:100%}
   .pagination{gap:5px}
@@ -272,7 +277,7 @@ footer strong{color:#fff; letter-spacing:2px}
       </select>
     </div>
     <div class="table-wrap">
-      <div class="table-head"><div>INDEX MAP ID</div><div>FILE RECOGNITION NAME</div></div>
+      <div class="table-head"><div>INDEX MAP ID</div><div>FILE RECOGNITION NAME</div><div>MAP LINK</div></div>
       <div id="list"><div class="loading">CONNECTING DATA STREAM STORAGE BLOCKS...</div></div>
       <div id="empty" class="empty">NO CORRESPONDING RECORDS EXIST</div>
       <div id="pagination" class="pagination" aria-label="Map pages"></div>
@@ -290,22 +295,58 @@ const CSV_URL = "maps.csv";
 let allMaps = [];
 let filteredMaps = [];
 
-// Clean split loop handles data without crashing on commas inside strings
+// Parse CSV rows including quoted fields and commas inside titles/URLs.
 function parseCSV(text) {
-  const lines = text.split('\n');
-  const result = [];
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
-    const commaIndex = line.indexOf(',');
-    if (commaIndex === -1) continue;
-    const id = line.substring(0, commaIndex).replace(/['"]/g, '').trim();
-    const name = line.substring(commaIndex + 1).replace(/['"]/g, '').trim();
-    if(id || name) {
-      result.push({ id: id, name: name });
+  const rows = [];
+  let row = [], field = '', quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '"') {
+      if (quoted && text[i + 1] === '"') { field += '"'; i++; }
+      else quoted = !quoted;
+    } else if (ch === ',' && !quoted) {
+      row.push(field.trim()); field = '';
+    } else if ((ch === '\n' || ch === '\r') && !quoted) {
+      if (ch === '\r' && text[i + 1] === '\n') i++;
+      row.push(field.trim());
+      if (row.some(value => value !== '')) rows.push(row);
+      row = []; field = '';
+    } else {
+      field += ch;
     }
   }
-  return result;
+  if (field.length || row.length) {
+    row.push(field.trim());
+    if (row.some(value => value !== '')) rows.push(row);
+  }
+  if (!rows.length) return [];
+
+  const headers = rows.shift().map(value => value.replace(/^\uFEFF/, '').trim().toLowerCase());
+  const idIndex = headers.findIndex(value => ['id', 'map_id', 'index map id'].includes(value));
+  const nameIndex = headers.findIndex(value => ['name', 'title', 'file recognition name'].includes(value));
+  const linkIndex = headers.findIndex(value => ['map_link', 'map link', 'link', 'url', 'download_url'].includes(value));
+
+  return rows.map(values => ({
+    id: values[idIndex >= 0 ? idIndex : 0] || '',
+    name: values[nameIndex >= 0 ? nameIndex : 1] || '',
+    mapLink: values[linkIndex >= 0 ? linkIndex : 2] || ''
+  })).filter(map => map.id || map.name);
+}
+
+// Escape CSV content before inserting it into the page.
+function escapeHTML(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
+function safeMapURL(value) {
+  try {
+    const url = new URL(value, window.location.href);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch (_) {
+    return '';
+  }
 }
 
 async function loadDatabase() {
@@ -358,8 +399,9 @@ function renderTable() {
   if (listEl) {
     listEl.innerHTML = pageMaps.map(map => `
       <div class="row">
-        <div class="id"># ${map.id}</div>
-        <div class="name"><span class="nolink">${map.name}</span></div>
+        <div class="id"># ${escapeHTML(map.id)}</div>
+        <div class="name"><span class="nolink">${escapeHTML(map.name)}</span></div>
+        ${safeMapURL(map.mapLink) ? `<a class="map-link" href="${escapeHTML(safeMapURL(map.mapLink))}" target="_blank" rel="noopener noreferrer" download><span>↓</span> DOWNLOAD</a>` : `<span class="map-link disabled" title="No map URL provided">NO LINK</span>`}
       </div>
     `).join('');
   }
